@@ -112,6 +112,8 @@ declare module 'vsts-task-lib/toolrunner' {
 	     * @returns   IExecResult
 	     */
 	    execSync(options?: IExecOptions): IExecResult;
+
+		pipe(tool: ToolRunner, options?: IExecOptions): Q.Promise<number>;
 	}
 
 }
