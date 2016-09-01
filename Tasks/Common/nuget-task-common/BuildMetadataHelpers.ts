@@ -65,6 +65,7 @@ export function getFeedName(feedUrl: string): string {
             nextValueIsFeedName = true;
         } 
     }
+    return null;
 }
 
 export function post(packageBuildMetadata: PackageBuildMetadata, url: string, accessToken: string): Q.Promise<PackageMetadata> {
