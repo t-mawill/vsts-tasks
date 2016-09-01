@@ -190,8 +190,8 @@ async function main(): Promise<void> {
                         return response;
                     })
                     .fail(err => {
-                        tl._writeLine('POST build metadata failed.');
-                        tl.debug(err);
+                        tl.warning('POST build metadata failed.');
+                        tl.warning(err);
                     })  
                 }
             }
