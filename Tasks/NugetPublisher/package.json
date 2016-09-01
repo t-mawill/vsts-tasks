@@ -17,7 +17,7 @@
   },
   "homepage": "https://github.com/Microsoft/vsts-tasks#readme",
   "dependencies": {
-    "xmlreader": "^0.2.3",
-    "jszip": "3.1.2"
+    "jszip": "3.1.2",    
+    "xmlreader": "^0.2.3"
   }
 }
