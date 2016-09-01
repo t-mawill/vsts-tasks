@@ -47,13 +47,14 @@ async function main(): Promise<void> {
                 throw new Error(tl.loc('NotARegularFile', packageFile));
             }
         });
+        
         var connectedServiceName = tl.getInput('connectedServiceName');
         var internalFeedUri = tl.getInput('feedName');
         var nuGetAdditionalArgs = tl.getInput('nuGetAdditionalArgs');
         var verbosity = tl.getInput('verbosity');
         var preCredProviderNuGet = tl.getBoolInput('preCredProviderNuGet');
 
-        var nuGetFeedType = tl.getInput("nuGetFeedType") || "external";
+        var nuGetFeedType = tl.getInput('nuGetFeedType') || 'external';
         // make sure the feed type is an expected one
         var normalizedNuGetFeedType = ['internal', 'external'].find(x => nuGetFeedType.toUpperCase() == x.toUpperCase());
         if (!normalizedNuGetFeedType) {
@@ -83,7 +84,7 @@ async function main(): Promise<void> {
             tl._writeLine(tl.loc("NoCredProviderOnAgent"));
         }
 
-        var accessToken = auth.getSystemAccessToken();     
+        var accessToken = auth.getSystemAccessToken();
 
         /*
         BUG: HTTP calls to access the location service currently do not work for customers behind proxies.
@@ -205,7 +206,7 @@ async function main(): Promise<void> {
         tl.error(err);
 
         if (buildIdentityDisplayName || buildIdentityAccount) {
-            tl.warning(tl.loc('BuildIdentityPermissionsHint', buildIdentityDisplayName, buildIdentityAccount));
+            tl.warning(tl.loc("BuildIdentityPermissionsHint", buildIdentityDisplayName, buildIdentityAccount));
         }
 
         tl.setResult(tl.TaskResult.Failed, tl.loc('PackagesFailedToPublish'))
@@ -222,7 +223,7 @@ function publishPackageAsync(packageFile: string, options: PublishOptions): Q.Pr
 
     nugetTool.pathArg(packageFile);
 
-    nugetTool.arg(['-Source', options.feedUri]);
+    nugetTool.arg(["-Source", options.feedUri]);
 
     nugetTool.argIf(options.apiKey, ['-ApiKey', options.apiKey]);
 
@@ -231,8 +232,8 @@ function publishPackageAsync(packageFile: string, options: PublishOptions): Q.Pr
         nugetTool.pathArg(options.configFile);
     }
 
-    if (options.verbosity && options.verbosity != '-') {
-        nugetTool.arg('-Verbosity');
+    if (options.verbosity && options.verbosity != "-") {
+        nugetTool.arg("-Verbosity");
         nugetTool.arg(options.verbosity);
     }
 
