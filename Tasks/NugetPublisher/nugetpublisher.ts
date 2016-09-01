@@ -33,7 +33,7 @@ class PublishOptions {
 async function main(): Promise<void> {
     let buildIdentityDisplayName: string = null;
     let buildIdentityAccount: string = null;
-    let packageBuildMetadata = null;
+    let packageBuildMetadata: buildMetadataHelpers.PackageBuildMetadata = null;
     
     try {
 
