@@ -1,7 +1,7 @@
-/// <reference path='../../definitions/node.d.ts'/>
-/// <reference path='../../definitions/Q.d.ts' />
-/// <reference path='../../definitions/vsts-task-lib.d.ts' />
-/// <reference path='../../definitions/nuget-task-common.d.ts' />
+/// <reference path="../../definitions/node.d.ts"/>
+/// <reference path="../../definitions/Q.d.ts" />
+/// <reference path="../../definitions/vsts-task-lib.d.ts" />
+/// <reference path="../../definitions/nuget-task-common.d.ts" />
 
 import path = require('path');
 import Q = require('q');
