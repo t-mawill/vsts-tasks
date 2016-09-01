@@ -172,13 +172,13 @@ async function main(): Promise<void> {
                     'BuildCollectionId': tl.getVariable('System.CollectionId'),
                     'BuildProjectId': tl.getVariable('System.TeamProjectId'),
                     'RepositoryId': tl.getVariable('Build.Repository.Id'), 
-                    'BuildAccountId': null, //NOTE: NULL for on prem, must set this value for hosted!
+                    'BuildAccountId': null, //NOTE: NULL for on prem, must set this value for hosted
                     'OriginalPackageVersion': packageMetadata.Version
                 };  
 
                 if (nuGetFeedType == 'internal') {
                     tl._writeLine('HELLO HELLO HELLO');
-                    var baseUrl = 'http://pkg-styx:8080/tfs/DefaultCollection'; //TODO: this is hard coded!
+                    var baseUrl = 'http://pkg-styx:8080/tfs/DefaultCollection'; //TODO: this is hard coded
                     var area = '/_apis/Packaging';
                     var service = '/Feeds/' + buildMetadataHelpers.getFeedName(internalFeedUri);
                     var resource = '/PackageRelationships/Builds';
