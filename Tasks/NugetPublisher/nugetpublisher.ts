@@ -1,7 +1,7 @@
-/// <reference path="../../definitions/node.d.ts"/>
-/// <reference path="../../definitions/Q.d.ts" />
-/// <reference path="../../definitions/vsts-task-lib.d.ts" />
-/// <reference path="../../definitions/nuget-task-common.d.ts" />
+/// <reference path='../../definitions/node.d.ts'/>
+/// <reference path='../../definitions/Q.d.ts' />
+/// <reference path='../../definitions/vsts-task-lib.d.ts' />
+/// <reference path='../../definitions/nuget-task-common.d.ts' />
 
 import path = require('path');
 import Q = require('q');
@@ -9,7 +9,8 @@ import tl = require('vsts-task-lib/task');
 import toolrunner = require('vsts-task-lib/toolrunner');
 import util = require('util');
 
-import locationHelpers = require("nuget-task-common/LocationHelpers");
+import buildMetadataHelpers = require('nuget-task-common/BuildMetadataHelpers');
+import locationHelpers = require('nuget-task-common/LocationHelpers');
 import * as ngToolRunner from 'nuget-task-common/NuGetToolRunner';
 import * as nutil from 'nuget-task-common/Utility';
 import * as auth from 'nuget-task-common/Authentication';
@@ -32,30 +33,30 @@ class PublishOptions {
 async function main(): Promise<void> {
     let buildIdentityDisplayName: string = null;
     let buildIdentityAccount: string = null;
+    let packageBuildMetadata = null;
     try {
 
         tl.setResourcePath(path.join(__dirname, 'task.json'));
 
         //read inputs
         var searchPattern = tl.getPathInput('searchPattern', true, false);
-        var filesList = nutil.resolveFilterSpec(searchPattern, tl.getVariable('System.DefaultWorkingDirectory') || process.cwd());
-        filesList.forEach(packageFile => {
+        var filesList = nutil.resolveFilterSpec(searchPattern, tl.getVariable('System.DefaultWorkingDirectory') || process.cwd());       
+        for (let packageFile of filesList) {
             if (!tl.stats(packageFile).isFile()) {
                 throw new Error(tl.loc('NotARegularFile', packageFile));
-            }
-        });
-
+            }  
+        }
         var connectedServiceName = tl.getInput('connectedServiceName');
         var internalFeedUri = tl.getInput('feedName');
         var nuGetAdditionalArgs = tl.getInput('nuGetAdditionalArgs');
         var verbosity = tl.getInput('verbosity');
         var preCredProviderNuGet = tl.getBoolInput('preCredProviderNuGet');
 
-        var nuGetFeedType = tl.getInput('nuGetFeedType') || "external";
+        var nuGetFeedType = tl.getInput('nuGetFeedType') || 'external';
         // make sure the feed type is an expected one
         var normalizedNuGetFeedType = ['internal', 'external'].find(x => nuGetFeedType.toUpperCase() == x.toUpperCase());
         if (!normalizedNuGetFeedType) {
-            throw new Error(tl.loc("UnknownFeedType", nuGetFeedType))
+            throw new Error(tl.loc('UnknownFeedType', nuGetFeedType))
         }
 
         nuGetFeedType = normalizedNuGetFeedType;
@@ -67,7 +68,7 @@ async function main(): Promise<void> {
             userNuGetPath = null;
         }
 
-        var serviceUri = tl.getEndpointUrl("SYSTEMVSSCONNECTION", false);
+        var serviceUri = tl.getEndpointUrl('SYSTEMVSSCONNECTION', false);
 
         //find nuget location to use
         var nuGetPathToUse = ngToolRunner.locateNuGetExe(userNuGetPath);
@@ -78,10 +79,10 @@ async function main(): Promise<void> {
             credProviderDir = path.dirname(credProviderPath)
         }
         else {
-            tl._writeLine(tl.loc("NoCredProviderOnAgent"));
+            tl._writeLine(tl.loc('NoCredProviderOnAgent'));
         }
 
-        var accessToken = auth.getSystemAccessToken();
+        var accessToken = auth.getSystemAccessToken();     
 
         /*
         BUG: HTTP calls to access the location service currently do not work for customers behind proxies.
@@ -108,7 +109,7 @@ async function main(): Promise<void> {
 
         // Note to readers: This variable will be going away once we have a fix for the location service for
         // customers behind proxies
-        let testPrefixes = tl.getVariable("NuGetTasks.ExtraUrlPrefixesForTesting");
+        let testPrefixes = tl.getVariable('NuGetTasks.ExtraUrlPrefixesForTesting');
         if (testPrefixes) {
             urlPrefixes = urlPrefixes.concat(testPrefixes.split(';'));
             tl.debug(`all URL prefixes: ${urlPrefixes}`)
@@ -126,18 +127,18 @@ async function main(): Promise<void> {
         var apiKey: string;
         var feedUri: string;
         var credCleanup = () => { return };
-        if (nuGetFeedType == "internal") {
+        if (nuGetFeedType == 'internal') {
             if (!ngToolRunner.isCredentialConfigEnabled()) {
-                tl.debug("Not configuring credentials in nuget.config");
+                tl.debug('Not configuring credentials in nuget.config');
             }
             else if (!credProviderDir || (userNuGetPath && preCredProviderNuGet)) {
                 var nuGetConfigHelper = new NuGetConfigHelper(nuGetPathToUse, null, authInfo, environmentSettings);
-                nuGetConfigHelper.setSources([{ feedName: "internalFeed", feedUri: internalFeedUri }]);
+                nuGetConfigHelper.setSources([{ feedName: 'internalFeed', feedUri: internalFeedUri }]);
                 configFile = nuGetConfigHelper.tempNugetConfigPath;
                 credCleanup = () => tl.rmRF(nuGetConfigHelper.tempNugetConfigPath, true);
             }
 
-            apiKey = "VSTS";
+            apiKey = 'VSTS';
             feedUri = internalFeedUri;
         }
         else {
@@ -159,6 +160,39 @@ async function main(): Promise<void> {
             var result = Q({});
             for (const packageFile of filesList) {
                 await publishPackageAsync(packageFile, publishOptions);
+                
+                // POST package build metadata to feed service
+                let packageMetadata = await buildMetadataHelpers.getPackageMetadata(packageFile);
+                packageBuildMetadata = {
+                    'PackageName': packageMetadata.Name,
+                    'ProtocolType': 'NuGet',
+                    'BuildId': tl.getVariable('Build.BuildId'),
+                    'CommitId': tl.getVariable('Build.SourceVersion'),
+                    'BuildCollectionId': tl.getVariable('System.CollectionId'),
+                    'BuildProjectId': tl.getVariable('System.TeamProjectId'),
+                    'RepositoryId': tl.getVariable('Build.Repository.Id'), 
+                    'BuildAccountId': null, //NOTE: NULL for on prem, must set this value for hosted!
+                    'OriginalPackageVersion': packageMetadata.Version
+                };  
+
+                if (nuGetFeedType == 'internal') {
+                    tl._writeLine('HELLO HELLO HELLO');
+                    var baseUrl = 'http://pkg-styx:8080/tfs/DefaultCollection'; //TODO: this is hard coded!
+                    var area = '/_apis/Packaging';
+                    var service = '/Feeds/' + buildMetadataHelpers.getFeedName(internalFeedUri);
+                    var resource = '/PackageRelationships/Builds';
+                    var url = baseUrl + area + service + resource; 
+                    buildMetadataHelpers.post(packageBuildMetadata, url, accessToken)
+                    .then(response => {
+                        tl._writeLine('POST build metadata sucessful.');
+                        tl.debug(JSON.stringify(response));
+                        return response;
+                    })
+                    .fail(err => {
+                        tl._writeLine('POST build metadata failed.');
+                        tl.debug(err);
+                    })  
+                }
             }
         } finally {
             credCleanup()
@@ -170,7 +204,7 @@ async function main(): Promise<void> {
         tl.error(err);
 
         if (buildIdentityDisplayName || buildIdentityAccount) {
-            tl.warning(tl.loc("BuildIdentityPermissionsHint", buildIdentityDisplayName, buildIdentityAccount));
+            tl.warning(tl.loc('BuildIdentityPermissionsHint', buildIdentityDisplayName, buildIdentityAccount));
         }
 
         tl.setResult(tl.TaskResult.Failed, tl.loc('PackagesFailedToPublish'))
@@ -187,7 +221,7 @@ function publishPackageAsync(packageFile: string, options: PublishOptions): Q.Pr
 
     nugetTool.pathArg(packageFile);
 
-    nugetTool.arg(["-Source", options.feedUri]);
+    nugetTool.arg(['-Source', options.feedUri]);
 
     nugetTool.argIf(options.apiKey, ['-ApiKey', options.apiKey]);
 
@@ -196,8 +230,8 @@ function publishPackageAsync(packageFile: string, options: PublishOptions): Q.Pr
         nugetTool.pathArg(options.configFile);
     }
 
-    if (options.verbosity && options.verbosity != "-") {
-        nugetTool.arg("-Verbosity");
+    if (options.verbosity && options.verbosity != '-') {
+        nugetTool.arg('-Verbosity');
         nugetTool.arg(options.verbosity);
     }
 
