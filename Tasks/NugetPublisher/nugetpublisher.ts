@@ -178,11 +178,15 @@ async function main(): Promise<void> {
                 };  
 
                 if (nuGetFeedType == 'internal') {
+                    var internalFeedName = buildMetadataHelpers.getFeedName(internalFeedUri);
+                    if (!internalFeedName) {
+                        tl.warning("Invalid URL: internal feed name not found");
+                    }
                     var baseUrl = 'http://pkg-styx:8080/tfs/DefaultCollection'; //TODO: this is hard coded
                     var area = '/_apis/Packaging';
                     var service = '/Feeds/' + buildMetadataHelpers.getFeedName(internalFeedUri);
                     var resource = '/PackageRelationships/Builds';
-                    var url = baseUrl + area + service + resource; 
+                    var url = baseUrl + area + service + resource;                     
                     buildMetadataHelpers.post(packageBuildMetadata, url, accessToken)
                     .then(response => {
                         tl._writeLine('POST build metadata sucessful.');
