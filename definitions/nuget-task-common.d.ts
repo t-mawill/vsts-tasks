@@ -70,6 +70,26 @@ declare module 'nuget-task-common/LocationApi' {
 	}
 
 }
+declare module 'nuget-task-common/BuildMetadataHelpers' {
+	export interface PackageBuildMetadata {
+		PackageName: string;
+		ProtocolType: string;
+		BuildId: string;
+		CommitId: string;
+		BuildCollectionId: string;
+		BuildProjectId: string;
+		RepositoryId: string;
+		BuildAccountId: string; //NOTE: NULL for on prem, must set this value for hosted!d
+		OriginalPackageVersion: string;
+	}
+	export interface PackageMetadata {
+		Name: string;
+		Version: string;
+	}
+	export function getPackageMetadata (packageFile: string): Q.Promise<PackageMetadata>;
+	export function getFeedName(feedUrl: string): string;	
+	export function post(packageBuildMetadata: PackageBuildMetadata, url: string, accessToken: string): Q.Promise<PackageMetadata>;
+}
 declare module 'nuget-task-common/LocationHelpers' {
 	import Q = require('q');
 	import * as locationApi from 'nuget-task-common/LocationApi';
