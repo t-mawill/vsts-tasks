@@ -34,6 +34,7 @@ async function main(): Promise<void> {
     let buildIdentityDisplayName: string = null;
     let buildIdentityAccount: string = null;
     let packageBuildMetadata = null;
+    
     try {
 
         tl.setResourcePath(path.join(__dirname, 'task.json'));
