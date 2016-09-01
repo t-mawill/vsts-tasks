@@ -9,7 +9,7 @@ import tl = require('vsts-task-lib/task');
 import toolrunner = require('vsts-task-lib/toolrunner');
 import util = require('util');
 
-import  buildMetadataHelpers = require("nuget-task-common/BuildMetadataHelpers");
+import buildMetadataHelpers = require("nuget-task-common/BuildMetadataHelpers");
 import locationHelpers = require("nuget-task-common/LocationHelpers");
 import * as ngToolRunner from 'nuget-task-common/NuGetToolRunner';
 import * as nutil from 'nuget-task-common/Utility';
