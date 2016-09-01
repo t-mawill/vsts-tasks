@@ -38,14 +38,15 @@ async function main(): Promise<void> {
 
         tl.setResourcePath(path.join(__dirname, 'task.json'));
 
+
         //read inputs
-        var searchPattern = tl.getPathInput('searchPattern', true, false);
-        var filesList = nutil.resolveFilterSpec(searchPattern, tl.getVariable('System.DefaultWorkingDirectory') || process.cwd()); 
--       filesList.forEach(packageFile => { 
-            if (!tl.stats(packageFile).isFile()) {
-                throw new Error(tl.loc('NotARegularFile', packageFile));
-            }  
-        }
+        var solution = tl.getPathInput('solution', true, false);
+        var filesList = nutil.resolveFilterSpec(solution, tl.getVariable('System.DefaultWorkingDirectory') || process.cwd());
+        filesList.forEach(solutionFile => {
+            if (!tl.stats(solutionFile).isFile()) {
+                throw new Error(tl.loc('NotARegularFile', solutionFile));
+            }
+        });
         var connectedServiceName = tl.getInput('connectedServiceName');
         var internalFeedUri = tl.getInput('feedName');
         var nuGetAdditionalArgs = tl.getInput('nuGetAdditionalArgs');
