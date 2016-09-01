@@ -47,14 +47,14 @@ async function main(): Promise<void> {
                 throw new Error(tl.loc('NotARegularFile', packageFile));
             }
         });
-        
+
         var connectedServiceName = tl.getInput('connectedServiceName');
         var internalFeedUri = tl.getInput('feedName');
         var nuGetAdditionalArgs = tl.getInput('nuGetAdditionalArgs');
         var verbosity = tl.getInput('verbosity');
         var preCredProviderNuGet = tl.getBoolInput('preCredProviderNuGet');
 
-        var nuGetFeedType = tl.getInput('nuGetFeedType') || 'external';
+        var nuGetFeedType = tl.getInput('nuGetFeedType') || "external";
         // make sure the feed type is an expected one
         var normalizedNuGetFeedType = ['internal', 'external'].find(x => nuGetFeedType.toUpperCase() == x.toUpperCase());
         if (!normalizedNuGetFeedType) {
