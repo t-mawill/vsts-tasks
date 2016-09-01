@@ -38,7 +38,6 @@ async function main(): Promise<void> {
 
         tl.setResourcePath(path.join(__dirname, 'task.json'));
 
-
         //read inputs
         var searchPattern = tl.getPathInput('searchPattern', true, false);
         var filesList = nutil.resolveFilterSpec(searchPattern, tl.getVariable('System.DefaultWorkingDirectory') || process.cwd());
