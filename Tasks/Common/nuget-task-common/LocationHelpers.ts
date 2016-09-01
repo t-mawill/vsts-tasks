@@ -1,10 +1,10 @@
-import * as Q from "q";
-import * as url from "url";
-import * as util from "util";
-import * as vstsWebApi from "vso-node-api/WebApi";
-import * as tl from "vsts-task-lib/task";
-
-import * as locationApi from "./LocationApi";
+import Q = require('q');
+import * as locationApi from './LocationApi';
+import * as vstsWebApi from 'vso-node-api/WebApi';
+import * as util from 'util';
+import * as tl from 'vsts-task-lib/task';
+import * as path from 'path';
+import * as url from 'url';
 
 function getUriForAccessMapping(mapping: locationApi.AccessMapping): string {
     let accessPoint = mapping.accessPoint;
@@ -29,21 +29,18 @@ function getUriForServiceDefinition(serviceDefinition: locationApi.ServiceDefini
         throw new Error("unexpected not-fully-qualified service definition");
     }
 
-    let locationMappings = serviceDefinition.locationMappings;
-    let hostGuidAccessMapping
-        = locationMappings.find(mapping => mapping.accessMappingMoniker.toUpperCase() === "HOSTGUIDACCESSMAPPING");
+    var locationMappings = serviceDefinition.locationMappings;
+    var hostGuidAccessMapping = locationMappings.find(mapping => mapping.accessMappingMoniker.toUpperCase() == "HOSTGUIDACCESSMAPPING")
     if (hostGuidAccessMapping) {
         return hostGuidAccessMapping.location;
     }
 
-    let serverAccessMapping
-        = locationMappings.find(mapping => mapping.accessMappingMoniker.toUpperCase() === "SERVERACCESSMAPPING");
+    var serverAccessMapping = locationMappings.find(mapping => mapping.accessMappingMoniker.toUpperCase() == "SERVERACCESSMAPPING")
     if (serverAccessMapping) {
         return serverAccessMapping.location;
     }
 
-    let publicAccessMapping
-        = locationMappings.find(mapping => mapping.accessMappingMoniker.toUpperCase() === "PUBLICACCESSMAPPING");
+    var publicAccessMapping = locationMappings.find(mapping => mapping.accessMappingMoniker.toUpperCase() == "PUBLICACCESSMAPPING")
     if (serverAccessMapping) {
         return publicAccessMapping.location;
     }
@@ -51,19 +48,17 @@ function getUriForServiceDefinition(serviceDefinition: locationApi.ServiceDefini
     return null;
 }
 
-function findServiceByIdentifier(
-    connectionData: locationApi.ConnectionData,
-    serviceId: string): locationApi.ServiceDefinition {
 
-    let serviceIdUppercase = serviceId.toUpperCase();
-    let serviceDefinitions = connectionData.locationServiceData.serviceDefinitions;
-    return serviceDefinitions.find(service => service.identifier.toUpperCase() === serviceIdUppercase);
+function findServiceByIdentifier(connectionData: locationApi.ConnectionData, serviceId: string): locationApi.ServiceDefinition {
+    var serviceIdUppercase = serviceId.toUpperCase();
+    var serviceDefinitions = connectionData.locationServiceData.serviceDefinitions;
+    return serviceDefinitions.find(service => service.identifier.toUpperCase() == serviceIdUppercase);
 }
 
 function hasServicesOfType(connectionData: locationApi.ConnectionData, serviceType: string): boolean {
-    let serviceTypeUpppercase = serviceType.toUpperCase();
-    let serviceDefinitions = connectionData.locationServiceData.serviceDefinitions;
-    return serviceDefinitions.some(service => service.serviceType.toUpperCase() === serviceTypeUpppercase);
+    var serviceTypeUpppercase = serviceType.toUpperCase();
+    var serviceDefinitions = connectionData.locationServiceData.serviceDefinitions;
+    return serviceDefinitions.some(service => service.serviceType.toUpperCase() == serviceTypeUpppercase);
 }
 
 export function getIdentityDisplayName(identity: locationApi.Identity): string {
@@ -78,30 +73,25 @@ export function getIdentityDisplayName(identity: locationApi.Identity): string {
 }
 
 export function getIdentityAccount(identity: locationApi.Identity): string {
-    if (identity.properties["Account"]) {
-        return identity.properties["Account"].$value;
+    if (identity.properties['Account']) {
+        return identity.properties['Account'].$value
     }
 
     return null;
 }
 
 export function getAllAccessMappingUris(connectionData: locationApi.ConnectionData): string[] {
-    let accessMappings = connectionData.locationServiceData.accessMappings;
+    var accessMappings = connectionData.locationServiceData.accessMappings;
     return accessMappings.map(getUriForAccessMapping);
 }
 
 export class GetConnectionDataForAreaError extends Error {
     constructor(message: string, public code: string) {
         super(message);
-    }
+    } 
 }
 
-export function getConnectionDataForArea(
-    serviceUri: string,
-    areaName: string,
-    areaId: string,
-    accessToken: string): Q.Promise<locationApi.ConnectionData> {
-
+export function getConnectionDataForArea(serviceUri: string, areaName: string, areaId: string, accessToken: string): Q.Promise<locationApi.ConnectionData> {
     return getConnectionData(serviceUri, accessToken)
         .then(connectionData => {
             tl.debug("successfully loaded origin service location data");
@@ -112,32 +102,32 @@ export function getConnectionDataForArea(
             else {
                 tl.debug(util.format("did not find %s routes directly on %s, trying SPS", areaName, serviceUri));
                 const rootLocationServiceId = "951917AC-A960-4999-8464-E3F0AA25B381";
-                let sps = findServiceByIdentifier(connectionData, rootLocationServiceId);
+                var sps = findServiceByIdentifier(connectionData, rootLocationServiceId);
                 if (!sps) {
                     throw new GetConnectionDataForAreaError(
                         tl.loc("NGCommon_SpsNotFound", areaName, areaId),
                         "SpsNotFound");
                 }
 
-                let spsUri = getUriForServiceDefinition(sps);
+                var spsUri = getUriForServiceDefinition(sps);
                 tl.debug(util.format("found SPS at %s", spsUri));
 
                 return getConnectionData(spsUri, accessToken)
                     .then(spsConnectionData => {
                         tl.debug("successfully loaded SPS location data");
-                        let areaService = findServiceByIdentifier(spsConnectionData, areaId);
+                        var areaService = findServiceByIdentifier(spsConnectionData, areaId);
                         if (!areaService) {
                             throw new GetConnectionDataForAreaError(
                                 tl.loc("NGCommon_AreaNotFoundInSps", areaName, areaId),
                                 "AreaNotFoundInSps");
                         }
 
-                        let areaServiceUri = getUriForServiceDefinition(areaService);
-                        tl.debug(util.format("found %s service in SPS at %s", areaId, areaServiceUri));
+                        var areaServiceUri = getUriForServiceDefinition(areaService)
+                        tl.debug(util.format("found %s service in SPS at %s", areaId, areaServiceUri))
                         return getConnectionData(areaServiceUri, accessToken)
-                            .then(targetConnectionData => {
+                            .then(connectionData => {
                                 tl.debug("successfully loaded target service location data");
-                                return targetConnectionData;
+                                return connectionData;
                             });
                     });
             }
@@ -145,7 +135,7 @@ export function getConnectionDataForArea(
 }
 
 export function getNuGetConnectionData(serviceUri: string, accessToken: string): Q.Promise<locationApi.ConnectionData> {
-    return getConnectionDataForArea(serviceUri, "nuget", "b3be7473-68ea-4a81-bfc7-9530baaa19ad", accessToken);
+    return getConnectionDataForArea(serviceUri, 'nuget', 'b3be7473-68ea-4a81-bfc7-9530baaa19ad', accessToken);
 }
 
 /** 
@@ -158,8 +148,8 @@ export function assumeNuGetUriPrefixes(collectionUri: string): Q.Promise<string[
     let collectionUrlObject = url.parse(collectionUri);
     if(collectionUrlObject.hostname.toUpperCase().endsWith(".VISUALSTUDIO.COM"))
     {
-        let hostparts = collectionUrlObject.hostname.split(".");
-        let packagingHostName = hostparts[0] + ".pkgs.visualstudio.com";
+        let hostparts = collectionUrlObject.hostname.split('.');
+        let packagingHostName = hostparts[0] + ".pkgs.visualstudio.com"
         collectionUrlObject.hostname = packagingHostName;
         // remove the host property so it doesn't override the hostname property for url.format
         delete collectionUrlObject.host;
