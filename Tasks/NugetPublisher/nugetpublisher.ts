@@ -52,11 +52,11 @@ async function main(): Promise<void> {
         var verbosity = tl.getInput('verbosity');
         var preCredProviderNuGet = tl.getBoolInput('preCredProviderNuGet');
 
-        var nuGetFeedType = tl.getInput('nuGetFeedType') || 'external';
+        var nuGetFeedType = tl.getInput("nuGetFeedType") || "external";
         // make sure the feed type is an expected one
         var normalizedNuGetFeedType = ['internal', 'external'].find(x => nuGetFeedType.toUpperCase() == x.toUpperCase());
         if (!normalizedNuGetFeedType) {
-            throw new Error(tl.loc('UnknownFeedType', nuGetFeedType))
+            throw new Error(tl.loc("UnknownFeedType", nuGetFeedType))
         }
 
         nuGetFeedType = normalizedNuGetFeedType;
@@ -68,7 +68,7 @@ async function main(): Promise<void> {
             userNuGetPath = null;
         }
 
-        var serviceUri = tl.getEndpointUrl('SYSTEMVSSCONNECTION', false);
+        var serviceUri = tl.getEndpointUrl("SYSTEMVSSCONNECTION", false);
 
         //find nuget location to use
         var nuGetPathToUse = ngToolRunner.locateNuGetExe(userNuGetPath);
@@ -79,7 +79,7 @@ async function main(): Promise<void> {
             credProviderDir = path.dirname(credProviderPath)
         }
         else {
-            tl._writeLine(tl.loc('NoCredProviderOnAgent'));
+            tl._writeLine(tl.loc("NoCredProviderOnAgent"));
         }
 
         var accessToken = auth.getSystemAccessToken();     
@@ -109,7 +109,7 @@ async function main(): Promise<void> {
 
         // Note to readers: This variable will be going away once we have a fix for the location service for
         // customers behind proxies
-        let testPrefixes = tl.getVariable('NuGetTasks.ExtraUrlPrefixesForTesting');
+        let testPrefixes = tl.getVariable("NuGetTasks.ExtraUrlPrefixesForTesting");
         if (testPrefixes) {
             urlPrefixes = urlPrefixes.concat(testPrefixes.split(';'));
             tl.debug(`all URL prefixes: ${urlPrefixes}`)
@@ -127,18 +127,18 @@ async function main(): Promise<void> {
         var apiKey: string;
         var feedUri: string;
         var credCleanup = () => { return };
-        if (nuGetFeedType == 'internal') {
+        if (nuGetFeedType == "internal") {
             if (!ngToolRunner.isCredentialConfigEnabled()) {
-                tl.debug('Not configuring credentials in nuget.config');
+                tl.debug("Not configuring credentials in nuget.config");
             }
             else if (!credProviderDir || (userNuGetPath && preCredProviderNuGet)) {
                 var nuGetConfigHelper = new NuGetConfigHelper(nuGetPathToUse, null, authInfo, environmentSettings);
-                nuGetConfigHelper.setSources([{ feedName: 'internalFeed', feedUri: internalFeedUri }]);
+                nuGetConfigHelper.setSources([{ feedName: "internalFeed", feedUri: internalFeedUri }]);
                 configFile = nuGetConfigHelper.tempNugetConfigPath;
                 credCleanup = () => tl.rmRF(nuGetConfigHelper.tempNugetConfigPath, true);
             }
 
-            apiKey = 'VSTS';
+            apiKey = "VSTS";
             feedUri = internalFeedUri;
         }
         else {
