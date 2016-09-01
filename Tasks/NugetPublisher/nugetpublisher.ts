@@ -178,7 +178,6 @@ async function main(): Promise<void> {
                 };  
 
                 if (nuGetFeedType == 'internal') {
-                    tl._writeLine('HELLO HELLO HELLO');
                     var baseUrl = 'http://pkg-styx:8080/tfs/DefaultCollection'; //TODO: this is hard coded
                     var area = '/_apis/Packaging';
                     var service = '/Feeds/' + buildMetadataHelpers.getFeedName(internalFeedUri);
